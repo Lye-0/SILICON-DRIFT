@@ -9,7 +9,7 @@
   let seed=supplied!==null&&/^\d{1,8}$/.test(supplied)?Number(supplied):randomSeed();
   const safe=params.get('safe')==='1';
   const requestedQuality=params.get('quality');
-  const settings={quality:safe?'low':['low','balanced','high'].includes(requestedQuality)?requestedQuality:isMobile?'low':'balanced',mobile:isMobile,safe,density:1,glow:.65,exposure:1.10,fog:.35,speed:1,signals:true,accent:[1,.25,.055]};
+  const settings={quality:safe?'low':['low','balanced','high'].includes(requestedQuality)?requestedQuality:'balanced',mobile:isMobile,safe,density:1,glow:.65,exposure:1.10,fog:.35,speed:1,signals:true,accent:[1,.25,.055]};
   let renderer,world,camera,time=0,last=0,ready=false,stopped=false,frameID=0,toastTimer,hiddenUI=false;
   let lastHUD=0,audioContext=null,audioOn=false,ambientGain=null;
   const errors=[];
@@ -43,23 +43,196 @@
     document.body.dataset.ready='false';stopped=false;last=0;scheduleFrame();
     if(notify)toast('新しい世界を生成しました · '+String(seed).padStart(8,'0'));
   }
-  async function audioToggle(){
-    try{
-      if(!audioContext){
-        const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw new Error('Audio unavailable');
-        audioContext=new Audio();ambientGain=audioContext.createGain();ambientGain.gain.value=0;ambientGain.connect(audioContext.destination);
-        [55,82.4069,110.03,164.78].forEach((freq,i)=>{
-          const o=audioContext.createOscillator(),g=audioContext.createGain();o.type='sine';o.frequency.value=freq;g.gain.value=.12/(i+1);
-          o.connect(g);g.connect(ambientGain);o.start();
-        });
-        const lfo=audioContext.createOscillator(),amount=audioContext.createGain();lfo.frequency.value=.065;amount.gain.value=.0015;lfo.connect(amount);amount.connect(ambientGain.gain);lfo.start();
+  // Ambient soundtrack: generated locally, with audible midrange pads and a slow
+  // musical pulse. Every signal, including modulation and echoes, passes through
+  // the final master gain so OFF really means silence.
+  const AUDIO_LEVEL=.8,AUDIO_FADE_OUT=.22;
+  let audioWanted=false,audioStarting=false,audioRevision=0,audioSuspendTimer=0;
+  let audioForeground=!document.hidden,previousAudioSessionType=null;
+
+  function createAmbientField(context,output){
+    const sources=[],mix=context.createGain(),highpass=context.createBiquadFilter();
+    const lowpass=context.createBiquadFilter(),compressor=context.createDynamicsCompressor();
+    highpass.type='highpass';highpass.frequency.value=85;highpass.Q.value=.5;
+    lowpass.type='lowpass';lowpass.frequency.value=2300;lowpass.Q.value=.45;
+    compressor.threshold.value=-12;compressor.knee.value=12;compressor.ratio.value=3;
+    compressor.attack.value=.02;compressor.release.value=.4;
+    mix.connect(highpass);highpass.connect(lowpass);lowpass.connect(compressor);compressor.connect(output);
+
+    const delay=context.createDelay(1),feedback=context.createGain(),wet=context.createGain();
+    delay.delayTime.value=.6;feedback.gain.value=.22;wet.gain.value=.22;
+    mix.connect(delay);delay.connect(feedback);feedback.connect(delay);delay.connect(wet);wet.connect(highpass);
+    const connectVoice=(node,pan)=>{
+      if(typeof context.createStereoPanner==='function'){
+        const panner=context.createStereoPanner();panner.pan.value=pan;node.connect(panner);panner.connect(mix);
+      }else node.connect(mix);
+    };
+
+    // A minor/add9 colour. Upper voices remain audible on small speakers; the
+    // original sub-bass-only, very low-level mix was easy to mistake for silence.
+    const voices=[
+      [110,.035,'triangle',-.25],
+      [164.8138,.055,'sine',.25],
+      [220,.09,'triangle',-.12],
+      [261.6256,.06,'sine',.12],
+      [329.6276,.04,'sine',0]
+    ];
+    voices.forEach(([frequency,level,type,pan],index)=>{
+      const oscillator=context.createOscillator(),gain=context.createGain();
+      oscillator.type=type;oscillator.frequency.value=frequency;gain.gain.value=level;
+      oscillator.connect(gain);connectVoice(gain,pan);sources.push(oscillator);
+      const lfo=context.createOscillator(),depth=context.createGain();
+      lfo.frequency.value=.043+index*.011;depth.gain.value=level*.18;
+      lfo.connect(depth);depth.connect(gain.gain);sources.push(lfo);
+    });
+
+    // A short, seamless, generated phrase. AudioBufferSourceNode loops on the
+    // audio thread: scene rendering and timer throttling cannot skip its notes.
+    const sampleRate=22050,beat=1.5,duration=24;
+    const phrase=context.createBuffer(1,sampleRate*duration,sampleRate),samples=phrase.getChannelData(0);
+    const notes=[440,0,659.2551,523.2511,0,391.9954,587.3295,0,523.2511,0,329.6276,659.2551,0,440,391.9954,0];
+    notes.forEach((frequency,step)=>{
+      if(!frequency)return;
+      const offset=Math.round((.18+step*beat)*sampleRate),length=Math.round(2.8*sampleRate);
+      for(let i=0;i<length;i++){
+        const t=i/sampleRate,phase=2*Math.PI*frequency*t;
+        const attack=Math.min(1,t/.018),end=Math.min(1,(2.8-t)/.12);
+        const envelope=attack*end*Math.exp(-t/0.62);
+        samples[(offset+i)%samples.length]+=.13*envelope*(Math.sin(phase)+.16*Math.sin(phase*2)*Math.exp(-t*2));
       }
-      await audioContext.resume();audioOn=!audioOn;
-      ambientGain.gain.setTargetAtTime(audioOn?.055:0,audioContext.currentTime,.6);
-      $('audio-toggle').setAttribute('aria-pressed',String(audioOn));$('audio-toggle').setAttribute('aria-label',audioOn?'環境音をオフにする':'環境音をオンにする');
-      toast(audioOn?'静かな環境音をオンにしました':'環境音をオフにしました');
-      if(!audioOn)setTimeout(()=>{if(!audioOn)audioContext.suspend();},1800);
-    }catch{toast('この環境では環境音を再生できませんでした');}
+    });
+    const pulses=context.createBufferSource();pulses.buffer=phrase;pulses.loop=true;
+    connectVoice(pulses,.08);sources.push(pulses);
+
+    // Low-level, band-limited texture rather than conspicuous white-noise hiss.
+    const noiseBuffer=context.createBuffer(1,2*sampleRate,sampleRate),noise=noiseBuffer.getChannelData(0);
+    let state=80426;
+    for(let i=0;i<noise.length;i++){
+      state=(Math.imul(state,1664525)+1013904223)>>>0;noise[i]=state/2147483648-1;
+    }
+    const noiseSource=context.createBufferSource(),noiseFilter=context.createBiquadFilter(),noiseGain=context.createGain();
+    noiseSource.buffer=noiseBuffer;noiseSource.loop=true;noiseFilter.type='bandpass';
+    noiseFilter.frequency.value=780;noiseFilter.Q.value=.7;noiseGain.gain.value=.009;
+    noiseSource.connect(noiseFilter);noiseFilter.connect(noiseGain);noiseGain.connect(mix);sources.push(noiseSource);
+    const when=context.currentTime+.03;sources.forEach(source=>source.start(when));
+  }
+
+  function syncAudioButton(){
+    audioOn=audioWanted&&!audioStarting&&audioForeground&&!document.hidden&&audioContext?.state==='running';
+    const button=$('audio-toggle');
+    const state=audioStarting?'starting':audioOn?'playing':audioWanted?'paused':'off';
+    const label=audioStarting?'環境音の開始をキャンセル':audioOn?'環境音をオフにする':audioWanted?'環境音を再開する':'環境音をオンにする';
+    button.setAttribute('aria-pressed',String(audioOn));button.setAttribute('aria-label',label);
+    button.setAttribute('aria-busy',String(audioStarting));button.title=label;button.dataset.audioState=state;
+  }
+  function setAmbientLevel(level,seconds=0){
+    if(!audioContext||!ambientGain||audioContext.state==='closed')return;
+    const gain=ambientGain.gain,now=audioContext.currentTime,current=gain.value;
+    if(seconds<=0){
+      // Reset the intrinsic value as well as automation. A context suspended in
+      // this same task may not process another quantum before it is resumed.
+      gain.cancelScheduledValues(0);gain.value=level;gain.setValueAtTime(level,now);return;
+    }
+    if(typeof gain.cancelAndHoldAtTime==='function')gain.cancelAndHoldAtTime(now);
+    else{gain.cancelScheduledValues(now);gain.setValueAtTime(current,now);}
+    gain.linearRampToValueAtTime(level,now+seconds);
+  }
+  function suspendAudioContext(context=audioContext){
+    if(!context||context.state==='closed'||context.state==='suspended')return;
+    try{Promise.resolve(context.suspend()).catch(()=>{});}catch{/* A closed device must not break the artwork. */}
+  }
+  function acquireAudioSession(){
+    // Optional enhancement only. Never require this experimental API to exist.
+    // Choose media playback after an explicit ON action, and restore the previous
+    // session type when OFF or hidden. No microphone permission is requested.
+    try{
+      const session=navigator.audioSession;
+      if(session){
+        if(previousAudioSessionType===null)previousAudioSessionType=session.type;
+        session.type='playback';
+      }
+    }catch{/* Regular Web Audio remains available without AudioSession. */}
+  }
+  function releaseAudioSession(){
+    try{
+      if(previousAudioSessionType!==null&&navigator.audioSession?.type==='playback')navigator.audioSession.type=previousAudioSessionType;
+    }catch{/* Some browsers expose a read-only/partial AudioSession. */}
+    previousAudioSessionType=null;
+  }
+  function ensureAudioContext(){
+    if(audioContext&&audioContext.state!=='closed')return audioContext;
+    const Audio=window.AudioContext||window.webkitAudioContext;
+    if(!Audio)throw new Error('Web Audio is unavailable');
+    const context=new Audio();audioContext=context;
+    try{
+      ambientGain=context.createGain();ambientGain.gain.value=0;ambientGain.connect(context.destination);
+      createAmbientField(context,ambientGain);
+      context.addEventListener('statechange',()=>{
+        if(audioContext!==context)return;
+        // A late resume must not undo OFF, a failed start, or a hidden tab.
+        if(!audioWanted||!audioForeground||document.hidden){
+          setAmbientLevel(0);suspendAudioContext(context);
+        }else if(context.state==='running'&&!audioStarting)setAmbientLevel(AUDIO_LEVEL,.7);
+        syncAudioButton();
+      });
+      return context;
+    }catch(error){
+      audioContext=null;ambientGain=null;
+      try{Promise.resolve(context.close()).catch(()=>{});}catch{}
+      throw error;
+    }
+  }
+  function waitForAudioStart(promise){
+    // resume() can stay pending under autoplay/device restrictions. Do not leave
+    // the button in a permanent starting state; retry on a fresh user gesture.
+    return new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error('Audio start timed out')),5000);
+      Promise.resolve(promise).then(value=>{clearTimeout(timer);resolve(value);},error=>{clearTimeout(timer);reject(error);});
+    });
+  }
+  async function startAmbientAudio(notify=true){
+    if(document.hidden||!audioForeground)return;
+    const revision=++audioRevision;
+    audioWanted=true;audioStarting=true;clearTimeout(audioSuspendTimer);syncAudioButton();
+    try{
+      acquireAudioSession();
+      const context=ensureAudioContext();
+      // Keep resume() in the original click call stack, before the first await.
+      await waitForAudioStart(context.resume());
+      if(revision!==audioRevision||!audioWanted||!audioForeground||document.hidden)return;
+      if(context.state!=='running')throw new Error('Audio playback is interrupted');
+      audioStarting=false;setAmbientLevel(AUDIO_LEVEL,.85);syncAudioButton();
+      if(notify)toast('環境音をオンにしました');
+    }catch{
+      if(revision!==audioRevision)return;
+      audioWanted=false;audioStarting=false;setAmbientLevel(0);suspendAudioContext();releaseAudioSession();syncAudioButton();
+      toast('音声を開始できませんでした。音ボタンをもう一度押してください');
+    }
+  }
+  function stopAmbientAudio(){
+    const revision=++audioRevision,context=audioContext;
+    audioWanted=false;audioStarting=false;clearTimeout(audioSuspendTimer);
+    setAmbientLevel(0,AUDIO_FADE_OUT);syncAudioButton();toast('環境音をオフにしました');
+    audioSuspendTimer=setTimeout(()=>{
+      if(revision!==audioRevision||audioWanted)return;
+      setAmbientLevel(0);suspendAudioContext(context);releaseAudioSession();
+    },350);
+  }
+  function audioToggle(){
+    // Also allow cancellation while resume() is pending. If Safari interrupted
+    // playback, a tap retries rather than falsely reporting that sound is ON.
+    if(audioWanted&&(audioStarting||audioContext?.state==='running'))stopAmbientAudio();
+    else return startAmbientAudio();
+  }
+  function pauseAmbientAudio(){
+    audioForeground=false;++audioRevision;audioStarting=false;clearTimeout(audioSuspendTimer);
+    setAmbientLevel(0);suspendAudioContext();releaseAudioSession();syncAudioButton();
+  }
+  function restoreAmbientAudio(){
+    audioForeground=!document.hidden;
+    if(audioForeground&&audioWanted&&!audioStarting&&audioContext?.state!=='running')return startAmbientAudio(false);
+    if(audioForeground&&audioWanted&&!audioStarting)setAmbientLevel(AUDIO_LEVEL,.7);
+    syncAudioButton();
   }
   function savePNG(){
     if(!renderer||!ready)return;
@@ -100,7 +273,7 @@
     $('settings-button').onclick=()=>toggleSettings($('settings').hidden);
     $('settings-close').onclick=()=>{toggleSettings(false);$('settings-button').focus();};
     $('hide-ui').onclick=()=>setImmersive(true);$('restore-ui').onclick=()=>setImmersive(false);
-    $('audio-toggle').onclick=audioToggle;
+    $('audio-toggle').onclick=audioToggle;syncAudioButton();
     $('capture').onclick=savePNG;
     $('fullscreen').onclick=async()=>{
       try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else toast('このブラウザでは全画面切替に対応していません');}catch{toast('この環境では全画面切替を利用できません');}
@@ -158,11 +331,11 @@
     });
     window.addEventListener('resize',()=>{try{renderer?.resize();}catch(error){showError(error);}});
     document.addEventListener('visibilitychange',()=>{
-      if(document.hidden){cancelAnimationFrame(frameID);audioContext?.suspend();}
-      else if(!stopped){last=0;scheduleFrame();if(audioOn)audioContext?.resume().catch(()=>{});}
+      if(document.hidden){cancelAnimationFrame(frameID);pauseAmbientAudio();}
+      else{if(!stopped){last=0;scheduleFrame();}restoreAmbientAudio();}
     });
-    window.addEventListener('pagehide',()=>{cancelAnimationFrame(frameID);last=0;});
-    window.addEventListener('pageshow',()=>{last=0;scheduleFrame();});
+    window.addEventListener('pagehide',()=>{cancelAnimationFrame(frameID);last=0;pauseAmbientAudio();});
+    window.addEventListener('pageshow',()=>{last=0;scheduleFrame();restoreAmbientAudio();});
     canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();showError(new Error('GPU描画が中断されました。再読み込みで再開してください。'));});
     $('retry').onclick=()=>location.reload();
   }
