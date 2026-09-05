@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="sd-version" content="1.1.0-split-pages">
+  <meta name="theme-color" content="#080b0d">
+  <meta name="description" content="SILICON DRIFT — 地平線まで続く電子基板を探索する、ランダム生成のインタラクティブ3D作品。">
+  <title>SILICON DRIFT — An infinite circuit world</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <canvas id="world" tabindex="0" aria-label="無限に広がる3D電子基板。ドラッグで視点回転、右ドラッグで平行移動、ホイールでズーム。WASDでも移動できます。"></canvas>
+  <div class="atmosphere" aria-hidden="true"></div>
+  <div class="edge-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <header class="topbar hud">
+    <button class="brand" id="home" aria-label="最初の視点へ戻る" title="最初の視点へ戻る">
+      <svg width="31" height="31" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M5 6h16v7H11v6h16M5 26h16v-7" stroke="currentColor" stroke-width="2.4"/><path d="M27 4v6M2 17h5" stroke="currentColor" stroke-width="1.4"/></svg>
+      <span>SILICON<span class="brand-light"> DRIFT</span><small>EXPERIMENT NO. 001</small></span>
+    </button>
+    <div class="header-center"><span class="tiny-cross">+</span> A FIELD WITHOUT AN EDGE <span class="tiny-cross">+</span></div>
+    <div class="header-actions">
+      <span class="live-status"><i></i> SYSTEM LIVE</span>
+      <button class="icon-button" id="audio-toggle" aria-label="環境音をオンにする" aria-pressed="false" title="環境音（初期状態はオフ）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Z"/><path class="audio-wave" d="M17 8c2 2 2 6 0 8M20 5c4 4 4 10 0 14"/><path class="audio-slash" d="m17 10 4 4m0-4-4 4"/></svg></button>
+      <button class="icon-button" id="fullscreen" aria-label="全画面表示" title="全画面"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4"/></svg></button>
+      <span class="header-divider"></span>
+      <button class="icon-button" id="help-button" aria-label="操作方法を表示" title="操作方法"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.8 9a2.3 2.3 0 0 1 4.5.6c0 1.5-2.3 1.8-2.3 3.4m0 3v.1"/></svg></button>
+    </div>
+  </header>
+
+  <main class="intro hud" id="intro">
+    <div class="eyebrow"><span></span> AN INFINITE CIRCUIT WORLD</div>
+    <h1>SILICON<br><span>DRIFT</span><sup>∞</sup></h1>
+    <p class="intro-copy">信号が、風景になる。<br><span>どこまでも続く、名もない基板の上へ。</span></p>
+    <button class="explore-button" id="explore"><span>探索をはじめる</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+    <div class="intro-note"><span class="orbit-symbol">◌</span> 現在、自動巡航中 <span class="note-line"></span></div>
+  </main>
+
+  <aside class="field-caption hud" aria-label="現在の世界">
+    <span class="caption-tick"></span>
+    <span class="caption-label">PROCEDURAL LANDSCAPE</span>
+    <span class="caption-value">NO BOUNDARIES.<br>ONLY CONNECTIONS.</span>
+  </aside>
+
+  <div class="side-tools hud">
+    <button class="icon-button" id="regenerate" aria-label="新しいランダムな世界を生成" title="世界を再生成 · R"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8V4h-4M4 16v4h4M4.8 9a7.5 7.5 0 0 1 12.4-4L20 8M4 16l2.8 3A7.5 7.5 0 0 0 19.2 15"/></svg></button>
+    <button class="icon-button" id="capture" aria-label="現在の景色をPNGとして保存" title="景色を撮影"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6 9.5 4h5L16 6h4v14H4V6h4Z"/><circle cx="12" cy="12.5" r="3.5"/></svg></button>
+    <button class="icon-button" id="settings-button" aria-label="描画設定を開く" aria-expanded="false" aria-controls="settings" title="描画設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h6m4 0h6M4 12h10m4 0h2M4 18h2m4 0h10"/><circle cx="12" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></svg></button>
+    <span class="tool-divider"></span>
+    <button class="icon-button" id="hide-ui" aria-label="操作パネルを隠す" title="没入モード · H"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+  </div>
+
+  <section class="settings-panel" id="settings" aria-label="描画設定" hidden>
+    <div class="panel-heading"><span>FIELD SETTINGS<small>世界の表情を変える</small></span><button class="icon-button panel-close" id="settings-close" aria-label="描画設定を閉じる">×</button></div>
+    <label class="slider-label" for="glow">光のにじみ <output id="glow-value">65%</output></label>
+    <input type="range" min="0" max="1.5" step="0.05" value="0.65" id="glow">
+    <label class="slider-label" for="exposure">明るさ <output id="exposure-value">110%</output></label>
+    <input type="range" min="0.6" max="2" step="0.05" value="1.1" id="exposure">
+    <label class="slider-label" for="fog">空気の深さ <output id="fog-value">35%</output></label>
+    <input type="range" min="0" max="1" step="0.05" value="0.35" id="fog">
+    <label class="slider-label" for="speed">信号の速度 <output id="speed-value">1.0×</output></label>
+    <input type="range" min="0.2" max="2.5" step="0.1" value="1" id="speed">
+    <div class="settings-row"><span>信号の色</span><div class="swatches"><button class="swatch selected" data-palette="copper" aria-label="カッパー" aria-pressed="true"></button><button class="swatch ice" data-palette="ice" aria-label="アイスブルー" aria-pressed="false"></button><button class="swatch white" data-palette="white" aria-label="シルバー" aria-pressed="false"></button></div></div>
+    <label class="settings-row" for="signals"><span>信号の光</span><input class="switch" id="signals" type="checkbox" checked></label>
+    <div class="settings-divider"></div>
+    <label class="settings-row" for="density"><span>部品の密度</span><select id="density"><option value="0.65">疎ら</option><option value="1" selected>標準</option><option value="1.35">高密度</option></select></label>
+    <label class="settings-row" for="quality"><span>描画品質</span><select id="quality"><option value="low">軽量</option><option value="balanced" selected>バランス</option><option value="high">高品質</option></select></label>
+    <p class="settings-note">密度・品質の変更時は世界を再構築します。</p>
+  </section>
+
+  <div class="bottom-hud hud">
+    <div class="navigation-bar" role="group" aria-label="探索コントロール">
+      <button class="nav-mode" id="free-mode" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 17-7-4-7 4 7-17Z"/></svg><span>自由探索</span></button>
+      <button class="nav-mode selected" id="auto-mode" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 6 14 6-14 6V6Z"/></svg><span>自動巡航</span><i></i></button>
+      <span class="nav-divider"></span>
+      <button class="view-button" data-view="low" title="低空視点 · 1">低空</button>
+      <button class="view-button" data-view="overview" title="俯瞰視点 · 2">俯瞰</button>
+      <button class="view-button" data-view="macro" title="接写視点 · 3">接写</button>
+    </div>
+    <div class="footer-line">
+      <div class="control-hints desktop-hints"><span><kbd>DRAG</kbd> 回転</span><span><kbd>RIGHT DRAG</kbd> 移動</span><span><kbd>SCROLL</kbd> ズーム</span><span><kbd>W A S D</kbd> 探索</span></div>
+      <div class="control-hints mobile-hints"><span>1本指で回転</span><span>2本指で移動・ズーム</span></div>
+      <span class="footer-signature">ONE SURFACE. INFINITE POSSIBILITIES.</span>
+    </div>
+  </div>
+
+  <aside class="radar-panel hud" aria-label="座標と現在地">
+    <div class="radar-top"><span>LOCAL FIELD</span><span class="radar-direction">N ↗</span></div>
+    <canvas id="radar" width="264" height="164" aria-label="現在地周辺の簡易マップ"></canvas>
+    <div class="radar-coordinates"><span>X <b id="coord-x">+0001.0</b></span><span>Z <b id="coord-z">+0001.0</b></span></div>
+    <button class="seed-button" id="seed-button" title="シード値を指定して世界を再現"><span>SEED</span><strong id="seed-value">00000000</strong><span class="seed-edit">↗</span></button>
+  </aside>
+
+  <div class="mobile-movement hud" aria-label="タッチ移動操作">
+    <div class="joystick" id="joystick" role="group" aria-label="ドラッグして前後左右に移動"><span>+</span><i id="joystick-thumb"></i></div>
+    <div class="zoom-buttons"><button id="zoom-in" aria-label="近づく">+</button><button id="zoom-out" aria-label="離れる">−</button></div>
+  </div>
+  <button class="restore-ui" id="restore-ui" hidden>表示を戻す <span>H</span></button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="loading" id="loading"><span class="loading-mark">SD</span><span>ASSEMBLING THE FIELD</span><p class="boot-stage" id="boot-stage" role="status" aria-live="polite">JavaScript の起動待ち</p><div class="loading-track"><i id="loading-progress"></i></div><small>ひとつの面。無数の可能性。</small>
+    <div class="boot-notice" id="boot-notice"><strong>この案内が消えない場合</strong><p>この表示では JavaScript が始まっていません。<br>ファイルのプレビューではなく、PCのローカルサーバーまたは公開先のURLを、Safariなどのブラウザで開いてください。</p><p>この版は分離構成です。index.html だけでなく、css/・js/・assets/ も同じ階層に配置してください。</p></div>
+  </div>
+
+  <dialog id="help-dialog">
+    <div class="dialog-top"><span>HOW TO EXPLORE</span><button class="icon-button" data-close-dialog aria-label="操作方法を閉じる">×</button></div>
+    <h2>行き先は、ありません。</h2><p>気になる部品に近づいたり、少し高い場所から見渡したり。<br>この基板は、前後左右にどこまでも続いています。</p>
+    <div class="help-grid"><span>ドラッグ / 1本指</span><strong>視点を回転</strong><span>右ドラッグ / 2本指</span><strong>前後左右へ移動</strong><span>ホイール / ピンチ</span><strong>近づく・離れる</strong><span>W A S D / 矢印キー</span><strong>前後左右へ移動</strong><span>Q / E</span><strong>視点の高さを下げる / 上げる</strong><span>Shift + 移動</span><strong>速く移動</strong><span>Space</span><strong>巡航と自由探索を切り替え</strong><span>1 / 2 / 3</span><strong>低空 / 俯瞰 / 接写</strong><span>H / Esc</span><strong>没入モード / 表示を戻す</strong><span>R</span><strong>新しい世界を生成</strong></div>
+    <p class="dialog-note">これは鑑賞のための生成アートです。回路の電気的な動作を再現するシミュレーターではありません。</p>
+    <button class="primary-button" data-close-dialog>探索に戻る <span>↗</span></button>
+  </dialog>
+
+  <dialog id="seed-dialog">
+    <div class="dialog-top"><span>WORLD SEED</span><button class="icon-button" data-close-dialog aria-label="シード設定を閉じる">×</button></div>
+    <h2>同じ世界へ、もう一度。</h2><p>シード値が同じなら、同じ密度設定で同じ基板が現れます。</p>
+    <form id="seed-form"><label for="seed-input">シード値（0〜99999999）</label><input id="seed-input" name="seed" inputmode="numeric" type="number" min="0" max="99999999" step="1" required>
+    <div class="dialog-actions"><button class="secondary-button" id="copy-seed" type="button">値をコピー</button><button class="primary-button" type="submit">この世界へ <span>↗</span></button></div></form>
+  </dialog>
+  <section class="error-screen" id="error-screen" hidden><div class="error-mark">SILICON DRIFT</div><h2>3D描画を開始できませんでした。</h2><p id="error-text">WebGL 2に対応したブラウザで開き、ハードウェアアクセラレーションを有効にしてください。</p><div class="recovery-actions"><button class="primary-button" id="retry">再読み込み</button><button class="secondary-button" id="safe-retry">互換モードで再試行</button></div><details class="boot-diagnostics" open><summary>診断情報</summary><pre id="error-detail"></pre></details><p class="recovery-note">ファイルのプレビューで開いている場合は、サイトのURLをブラウザで開き直してください。</p></section>
+  <noscript><link rel="stylesheet" href="./css/noscript.css"><div class="error-screen"><h2>この表示では3Dを実行できません。</h2><p>JavaScriptが実行されていません。ファイルのプレビューではなく、PCのローカルサーバーまたは公開先のURLをSafariなどのブラウザで開いてください。</p><p>通常のブラウザでもこの案内が出る場合は、JavaScriptの設定も確認してください。</p></div></noscript>
+  <!-- defer keeps this dependency order and runs after the document is parsed.
+       Bootstrap is deliberately separate so it can report failures in the app. -->
+  <script defer src="./js/bootstrap.js"></script>
+  <script defer src="./js/math.js"></script>
+  <script defer src="./js/geometry.js"></script>
+  <script defer src="./js/renderer.js"></script>
+  <script defer src="./js/world.js"></script>
+  <script defer src="./js/controls.js"></script>
+  <script defer src="./js/app.js"></script>
+</body>
+</html>

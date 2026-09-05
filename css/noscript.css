@@ -1,0 +1,4 @@
+/* Keep the static JavaScript-disabled explanation visible instead of the loader. */
+#loading {
+  display: none !important;
+}

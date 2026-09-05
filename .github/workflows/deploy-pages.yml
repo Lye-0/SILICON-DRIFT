@@ -1,0 +1,60 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# No source commits are created by this workflow.
+permissions:
+  contents: read
+
+# Do not interrupt an already running Pages deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Manual runs from a feature branch must not replace the production site.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js for local checks and file copying
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      # Only Node.js built-ins are used; npm install / npm ci is not needed.
+      - name: Test source, routes and packaging
+        run: npm test
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # Copies only public files. It does NOT merge JavaScript/CSS into HTML.
+      - name: Prepare separate static files
+        run: npm run package:pages
+
+      - name: Upload website artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./_site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

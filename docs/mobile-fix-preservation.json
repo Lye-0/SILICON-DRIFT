@@ -1,0 +1,29 @@
+{
+  "css/style.css": {
+    "identical_to_mobile_fix_1_0_1": true,
+    "sha256": "e84cbcaf03c5b3b05150746b0b6fed02059d2cd3bfb7d77187c453f50d780075"
+  },
+  "js/math.js": {
+    "identical_to_mobile_fix_1_0_1": true,
+    "sha256": "614685f3418b7e470c925eb1f972016386f5f34e850262e3880ba44310968eba"
+  },
+  "js/geometry.js": {
+    "identical_to_mobile_fix_1_0_1": true,
+    "sha256": "6905694e6a57a0161ecef2f463235ce3a6eddb89db28d4cd97f3b9cdac2a3712"
+  },
+  "js/renderer.js": {
+    "identical_to_mobile_fix_1_0_1": true,
+    "sha256": "6979cee5e3c5748f006f38e4ac2cfe049ccc733f21298e9d9de7dd463905cf7c"
+  },
+  "js/world.js": {
+    "identical_to_mobile_fix_1_0_1": true,
+    "sha256": "a96ff3fd2471674212c31ea2043b40f86df590a5cd8063fecec66dfe59413402"
+  },
+  "js/controls.js": {
+    "identical_to_mobile_fix_1_0_1": true,
+    "sha256": "ca4aec3d969a21774f008d7ddbd5171c7d64f1b2bf1b69ed68279ae16c2eea49"
+  },
+  "js/app.js": {
+    "only_header_comment_and_version_changed": true
+  }
+}

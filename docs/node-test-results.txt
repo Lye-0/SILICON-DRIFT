@@ -1,0 +1,206 @@
+
+> silicon-drift@1.1.0 test
+> node --test tests/core.test.mjs tests/server.test.mjs tests/site.test.mjs
+
+TAP version 13
+# Subtest: same seed and coordinates regenerate exactly the same layout
+ok 1 - same seed and coordinates regenerate exactly the same layout
+  ---
+  duration_ms: 9.997037
+  type: 'test'
+  ...
+# Subtest: different seeds and neighbour tiles produce different arrangements
+ok 2 - different seeds and neighbour tiles produce different arrangements
+  ---
+  duration_ms: 5.117903
+  type: 'test'
+  ...
+# Subtest: all eight component families occur in the generated field
+ok 3 - all eight component families occur in the generated field
+  ---
+  duration_ms: 8.348591
+  type: 'test'
+  ...
+# Subtest: density changes average occupied-cell count
+ok 4 - density changes average occupied-cell count
+  ---
+  duration_ms: 23.108546
+  type: 'test'
+  ...
+# Subtest: continuous buses meet across all four tile boundaries
+ok 5 - continuous buses meet across all four tile boundaries
+  ---
+  duration_ms: 0.236054
+  type: 'test'
+  ...
+# Subtest: shared meshes have finite in-range geometry with unit normals
+ok 6 - shared meshes have finite in-range geometry with unit normals
+  ---
+  duration_ms: 19.45749
+  type: 'test'
+  ...
+# Subtest: view/projection places look-at point in center
+ok 7 - view/projection places look-at point in center
+  ---
+  duration_ms: 1.05075
+  type: 'test'
+  ...
+# Subtest: chunk requests cover negative coordinates and remain bounded
+ok 8 - chunk requests cover negative coordinates and remain bounded
+  ---
+  duration_ms: 0.688125
+  type: 'test'
+  ...
+# Subtest: moving sectors disposes distant chunks
+ok 9 - moving sectors disposes distant chunks
+  ---
+  duration_ms: 1.196188
+  type: 'test'
+  ...
+# Subtest: floating origin preserves logical world position
+ok 10 - floating origin preserves logical world position
+  ---
+  duration_ms: 1.17602
+  type: 'test'
+  ...
+# Subtest: camera zoom is bounded
+ok 11 - camera zoom is bounded
+  ---
+  duration_ms: 0.465857
+  type: 'test'
+  ...
+# Subtest: independent bootstrap marks actual script execution
+ok 12 - independent bootstrap marks actual script execution
+  ---
+  duration_ms: 2.771115
+  type: 'test'
+  ...
+# Subtest: watchdog replaces stalled loading with diagnostic text
+ok 13 - watchdog replaces stalled loading with diagnostic text
+  ---
+  duration_ms: 2.308305
+  type: 'test'
+  ...
+# Subtest: background time is not counted as a foreground startup stall
+ok 14 - background time is not counted as a foreground startup stall
+  ---
+  duration_ms: 2.048859
+  type: 'test'
+  ...
+# Subtest: completed boot disables startup watchdog
+ok 15 - completed boot disables startup watchdog
+  ---
+  duration_ms: 2.274273
+  type: 'test'
+  ...
+# Subtest: global syntax errors are visible without the main app running
+ok 16 - global syntax errors are visible without the main app running
+  ---
+  duration_ms: 5.661964
+  type: 'test'
+  ...
+# Subtest: safe retry preserves URL seed and opts into low quality
+ok 17 - safe retry preserves URL seed and opts into low quality
+  ---
+  duration_ms: 3.336995
+  type: 'test'
+  ...
+# Subtest: rebuild can re-arm a previously completed boot
+ok 18 - rebuild can re-arm a previously completed boot
+  ---
+  duration_ms: 2.532937
+  type: 'test'
+  ...
+# Subtest: missing split script is reported with its path
+ok 19 - missing split script is reported with its path
+  ---
+  duration_ms: 2.764654
+  type: 'test'
+  ...
+# Subtest: root serves the split HTML with no caching
+ok 20 - root serves the split HTML with no caching
+  ---
+  duration_ms: 115.108156
+  type: 'test'
+  ...
+# Subtest: CSS, JavaScript and icon use executable/usable MIME types
+ok 21 - CSS, JavaScript and icon use executable/usable MIME types
+  ---
+  duration_ms: 61.806454
+  type: 'test'
+  ...
+# Subtest: GitHub Pages subdirectory serves every relative dependency
+ok 22 - GitHub Pages subdirectory serves every relative dependency
+  ---
+  duration_ms: 58.778771
+  type: 'test'
+  ...
+# Subtest: server does not expose repository, docs, tests, env or path traversal
+ok 23 - server does not expose repository, docs, tests, env or path traversal
+  ---
+  duration_ms: 24.049886
+  type: 'test'
+  ...
+# Subtest: preview base path normalization rejects unsafe names
+ok 24 - preview base path normalization rejects unsafe names
+  ---
+  duration_ms: 0.631965
+  type: 'test'
+  ...
+# Subtest: HTML contains external scripts in dependency order, without inline application code
+ok 25 - HTML contains external scripts in dependency order, without inline application code
+  ---
+  duration_ms: 2.786048
+  type: 'test'
+  ...
+# Subtest: all website asset references remain within /SILICON-DRIFT/
+ok 26 - all website asset references remain within /SILICON-DRIFT/
+  ---
+  duration_ms: 12.884138
+  type: 'test'
+  ...
+# Subtest: each split JavaScript file parses independently
+ok 27 - each split JavaScript file parses independently
+  ---
+  duration_ms: 18.453842
+  type: 'test'
+  ...
+# Subtest: website does not load a CDN or call a remote API
+ok 28 - website does not load a CDN or call a remote API
+  ---
+  duration_ms: 21.21161
+  type: 'test'
+  ...
+# Subtest: Pages package copies only public files byte-for-byte, preserving the split layout
+ok 29 - Pages package copies only public files byte-for-byte, preserving the split layout
+  ---
+  duration_ms: 83.590903
+  type: 'test'
+  ...
+# Subtest: packager refuses to overwrite its source directory
+ok 30 - packager refuses to overwrite its source directory
+  ---
+  duration_ms: 0.996053
+  type: 'test'
+  ...
+# Subtest: site allowlist ignores hidden files inside public directories
+ok 31 - site allowlist ignores hidden files inside public directories
+  ---
+  duration_ms: 32.451167
+  type: 'test'
+  ...
+# Subtest: workflow deploys only main, with the required Pages permission and artifact path
+ok 32 - workflow deploys only main, with the required Pages permission and artifact path
+  ---
+  duration_ms: 2.618032
+  type: 'test'
+  ...
+1..32
+# tests 32
+# suites 0
+# pass 32
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 655.957172

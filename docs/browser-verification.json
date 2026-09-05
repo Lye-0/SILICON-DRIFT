@@ -1,0 +1,191 @@
+{
+  "version": "1.1.0",
+  "engine": "Chromium / software GPU",
+  "mobile": "390x844 DPR3, 844x390 DPR3, touch emulation; not iPhone hardware / not Safari",
+  "checks": [
+    {
+      "name": "Mobile: first frame reaches READY and loader is hidden",
+      "passed": true
+    },
+    {
+      "name": "Split loading: all seven scripts are external and ordered",
+      "passed": true
+    },
+    {
+      "name": "Subdirectory fixture: browser requested every split script",
+      "passed": true
+    },
+    {
+      "name": "Mobile: all 25 chunks generated",
+      "passed": true
+    },
+    {
+      "name": "Mobile: default auto cruise remains enabled",
+      "passed": true
+    },
+    {
+      "name": "Mobile: light profile, no unused shadow texture, LDR target",
+      "passed": true
+    },
+    {
+      "name": "Mobile: no preserved default buffer or MSAA",
+      "passed": true
+    },
+    {
+      "name": "Mobile: no horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "Mobile: exploration and joystick appear",
+      "passed": true
+    },
+    {
+      "name": "Mobile: native one-finger touch rotates",
+      "passed": true
+    },
+    {
+      "name": "Mobile: native two-finger pinch zooms",
+      "passed": true
+    },
+    {
+      "name": "Mobile: joystick moves and releases",
+      "passed": true
+    },
+    {
+      "name": "Mobile: settings panel fits screen",
+      "passed": true
+    },
+    {
+      "name": "Mobile: density rebuild completes",
+      "passed": true
+    },
+    {
+      "name": "Mobile: seed form regenerates successfully",
+      "passed": true
+    },
+    {
+      "name": "Mobile: same seed regenerates identical component layout",
+      "passed": true
+    },
+    {
+      "name": "Mobile: distant exploration streams bounded chunks",
+      "passed": true
+    },
+    {
+      "name": "Mobile: floating origin keeps coordinates small",
+      "passed": true
+    },
+    {
+      "name": "Mobile: no WebGL errors after interaction",
+      "passed": true
+    },
+    {
+      "name": "Mobile: immersive toggle hides HUD",
+      "passed": true
+    },
+    {
+      "name": "Mobile: restore HUD works",
+      "passed": true
+    },
+    {
+      "name": "Mobile: PNG capture remains available",
+      "passed": true
+    },
+    {
+      "name": "Mobile: landscape resize keeps lightweight profile",
+      "passed": true
+    },
+    {
+      "name": "Landscape cold start: selects low profile despite width > 760px",
+      "passed": true
+    },
+    {
+      "name": "Desktop: still starts in balanced mode with shadows",
+      "passed": true
+    },
+    {
+      "name": "Desktop: mouse orbit works",
+      "passed": true
+    },
+    {
+      "name": "Desktop: right-drag translates",
+      "passed": true
+    },
+    {
+      "name": "Desktop: WASD navigation works",
+      "passed": true
+    },
+    {
+      "name": "Desktop: camera presets work",
+      "passed": true
+    },
+    {
+      "name": "Desktop: switching to low releases shadow target",
+      "passed": true
+    },
+    {
+      "name": "Desktop: switching back restores shadows",
+      "passed": true
+    },
+    {
+      "name": "Desktop: seed rebuild completes",
+      "passed": true
+    },
+    {
+      "name": "Desktop: no WebGL error",
+      "passed": true
+    },
+    {
+      "name": "Lifecycle: resumes rendering after pagehide/pageshow",
+      "passed": true
+    },
+    {
+      "name": "No unexpected JS / console errors during normal interactions",
+      "passed": true
+    },
+    {
+      "name": "Safe mode: reaches READY without HDR, shadows or bloom passes",
+      "passed": true
+    },
+    {
+      "name": "Safe mode: no WebGL errors",
+      "passed": true
+    },
+    {
+      "name": "WebGL unavailable: visible error instead of stuck loader",
+      "passed": true
+    },
+    {
+      "name": "WebGL unavailable: stage and retry actions are visible",
+      "passed": true
+    },
+    {
+      "name": "Main script syntax error: independent bootstrap reports it",
+      "passed": true
+    },
+    {
+      "name": "Missing external script: shows diagnosis instead of an endless loader",
+      "passed": true
+    },
+    {
+      "name": "CSP blocks scripts: static opening instructions remain visible",
+      "passed": true
+    },
+    {
+      "name": "JavaScript disabled: explicit noscript instructions replace loader",
+      "passed": true
+    },
+    {
+      "name": "No animation frames: real watchdog exits loading with diagnosis",
+      "passed": true
+    },
+    {
+      "name": "Context loss: diagnostic error and retry rather than infinite loader",
+      "passed": true
+    }
+  ],
+  "unexpected_errors": [],
+  "mode": "in-memory HTML + separate external asset fixtures",
+  "repository_path": "/SILICON-DRIFT/",
+  "browser_version": "144.0.7559.96"
+}
