@@ -1,0 +1,17 @@
+# Generated site / local verification outputs
+_site/
+test-results/
+node_modules/
+__pycache__/
+*.py[cod]
+*.log
+*.zip
+
+# Local-only secrets and settings
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
